@@ -3,6 +3,7 @@ package com.olivergreen.ioslauncher.data
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,10 +24,13 @@ class AppRepository(private val context: Context) {
                 val activity = info.activityInfo ?: return@mapNotNull null
                 val component = ComponentName(activity.packageName, activity.name)
                 val label = activity.loadLabel(packageManager).toString()
+                val flags = activity.applicationInfo?.flags ?: 0
+                val isSystem = flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
                 AppEntry(
                     label = label,
                     packageName = activity.packageName,
                     className = activity.name,
+                    isSystem = isSystem,
                     launchIntent = Intent(Intent.ACTION_MAIN)
                         .addCategory(Intent.CATEGORY_LAUNCHER)
                         .setComponent(component)

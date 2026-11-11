@@ -76,4 +76,16 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun resetLayout() {
         viewModelScope.launch { settings.setPinnedOrder(emptyList()) }
     }
+
+    fun setShowLabels(show: Boolean) {
+        viewModelScope.launch { settings.setShowLabels(show) }
+    }
+
+    fun setTheme(theme: AppTheme) {
+        viewModelScope.launch { settings.setTheme(theme) }
+    }
+
+    fun setFirstRunDone() {
+        viewModelScope.launch { settings.setFirstRunDone() }
+    }
 }

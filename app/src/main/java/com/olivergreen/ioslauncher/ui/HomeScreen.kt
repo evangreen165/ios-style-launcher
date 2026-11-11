@@ -20,7 +20,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -54,6 +56,7 @@ fun pageCountFor(appCount: Int): Int =
 fun HomeScreen(
     viewModel: HomeViewModel,
     onOpenDrawer: () -> Unit,
+    onOpenSettings: () -> Unit,
     onLongPress: ((AppEntry) -> Unit)? = null,
 ) {
     val apps by viewModel.combinedApps.collectAsState()
@@ -73,6 +76,20 @@ fun HomeScreen(
             ),
     ) {
         WallpaperBackdrop(full = wallpaper?.full)
+        IconButton(
+            onClick = onOpenSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 4.dp, end = 8.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Настройки",
+                tint = Color.White.copy(alpha = 0.55f),
+                modifier = Modifier.size(18.dp),
+            )
+        }
         Column(
             Modifier
                 .fillMaxSize()
