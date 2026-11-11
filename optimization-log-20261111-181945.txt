@@ -1,0 +1,146 @@
+========================================================
+Optimization log — TCL T610K (Android 14) via ADB
+Started: 2026-11-11T18:19:45Z
+Host: Windows, PowerShell 5.1
+Working dir: C:\tcl40se
+========================================================
+
+## STAGE 0 — Pre-flight baseline (read-only)
+
+[18:19:45Z] CMD: adb devices -l
+Exit: 0
+OUT:
+List of devices attached
+75BUIJ4D8PUGRCRO       device product:T610K_RU model:T610K device:Model_3 transport_id:4
+
+[18:20Z] CMD: adb shell "pm list packages | grep -E 'tcl|tct|google'"
+Exit: 0
+OUT: (full list captured, see session transcript; 140 packages matched)
+
+[18:20Z] CMD: adb shell "pm list packages -d --user 0"
+Exit: 0
+OUT:
+package:com.google.android.gms.supervision
+
+[18:20Z] CMD: adb shell "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
+Exit: 0
+OUT:
+priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=true
+com.tcl.android.launcher/.uioverrides.TclQuickstepLauncher
+
+[18:20Z] CMD: adb shell "settings get global window_animation_scale"
+Exit: 0
+OUT: 1
+
+[18:20Z] CMD: adb shell "settings get global transition_animation_scale"
+Exit: 0
+OUT: 1
+
+[18:20Z] CMD: adb shell "settings get global animator_duration_scale"
+Exit: 0
+OUT: null
+
+[18:20Z] CMD: adb shell "settings get global background_process_limit"
+Exit: 0
+OUT: null
+
+[18:20Z] CMD: adb shell "pm list packages -3"
+Exit: 0
+OUT:
+package:com.yandex.searchapp
+package:com.tayu.tau.pedometer
+package:com.gameloft.android.GloftANPH
+package:com.topjohnwu.magisk
+package:com.google.android.videos
+package:com.gameloft.android.GloftROLP
+package:com.google.android.apps.youtube.music
+package:com.microsoft.amp.apps.bingnews
+package:com.yandex.browser
+package:com.qidian.Int.reader
+package:com.google.android.keep
+package:com.google.android.apps.docs
+package:com.joeykrim.rootcheck
+package:com.mobisystems.office
+package:com.cxinventor.file.explorer
+package:com.google.android.apps.subscriptions.red
+
+### BASELINE SUMMARY
+- Serial: 75BUIJ4D8PUGRCRO / T610K_RU / T610K
+- Already disabled (user 0): com.google.android.gms.supervision
+- HOME component (rollback point): com.tcl.android.launcher/.uioverrides.TclQuickstepLauncher
+- window_animation_scale     = 1
+- transition_animation_scale = 1
+- animator_duration_scale    = null
+- background_process_limit   = null
+
+### STAGE 1 CANDIDATE CHECK (from plan table)
+[18:20Z] CMD: adb shell "pm list packages | grep -E 'videos|play.games|feedback|partnersetup|smartalexa|usercenter|dashboard'"
+Exit: 0
+OUT:
+package:com.google.android.partnersetup
+package:com.google.android.videos
+package:com.google.android.feedback
+
+- com.google.android.videos        PRESENT
+- com.google.android.play.games    ABSENT
+- com.google.android.feedback      PRESENT
+- com.google.android.partnersetup  PRESENT
+- com.tcl.smartalexa               ABSENT
+- com.tcl.usercenter               ABSENT
+- com.tcl.dashboard                ABSENT
+
+## STAGE 1 — Debloat (pm disable-user --user 0)
+
+[18:22Z] CONFIRM: com.google.android.videos -> Y
+[18:22Z] CMD: adb shell pm disable-user --user 0 com.google.android.videos
+Exit: 0
+OUT: Package com.google.android.videos new state: disabled-user
+RESULT: OK
+
+[18:23Z] CONFIRM: com.google.android.feedback -> Y
+[18:23Z] CMD: adb shell pm disable-user --user 0 com.google.android.feedback
+Exit: 0
+OUT: Package com.google.android.feedback new state: disabled-user
+RESULT: OK
+
+[18:24Z] CONFIRM: com.google.android.partnersetup -> Y
+[18:24Z] CMD: adb shell pm disable-user --user 0 com.google.android.partnersetup
+Exit: 0
+OUT: Package com.google.android.partnersetup new state: disabled-user
+RESULT: OK
+
+### STAGE 1.4 CONTROL — pm list packages -d --user 0
+[18:24Z] CMD: adb shell "pm list packages -d --user 0"
+Exit: 0
+OUT:
+package:com.google.android.partnersetup
+package:com.google.android.videos
+package:com.google.android.gms.supervision
+package:com.google.android.feedback
+VERDICT: all three newly disabled packages present. OK.
+
+### STAGE 1.4 PAUSE
+[18:26Z] User confirmed manual reboot + all functions OK (calls, SMS, mobile data, Wi-Fi, BT, camera, notifications, Play Store, clock). Proceeded to Stage 2.
+
+## STAGE 2 — UI speed settings (reversible)
+
+[18:27Z] CMD: adb shell settings put global window_animation_scale 0.5
+Exit: 0 (no output)
+
+[18:27Z] CMD: adb shell settings put global transition_animation_scale 0.5
+Exit: 0 (no output)
+
+[18:27Z] CMD: adb shell settings put global animator_duration_scale 0.5
+Exit: 0 (no output)
+
+[18:27Z] CMD: adb shell settings put global background_process_limit 4
+Exit: 0 (no output)
+
+### STAGE 2 VERIFY
+[18:28Z] window_animation_scale     = 0.5   (before: 1)
+[18:28Z] transition_animation_scale = 0.5   (before: 1)
+[18:28Z] animator_duration_scale    = 0.5   (before: null)
+[18:28Z] background_process_limit   = 4     (before: null)
+RESULT: OK
+NOTE: background_process_limit may require reboot on Android 14. Rollback: adb shell settings delete global background_process_limit
+
