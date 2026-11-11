@@ -41,19 +41,21 @@ class WallpaperProvider(private val context: Context) {
         _wallpaper.value = WallpaperData(id, full.asImageBitmap(), blurred.asImageBitmap())
     }
 
-    private fun currentWallpaperId(): Int =
+    private fun currentWallpaperId(): Int = try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
         } else {
             FALLBACK_ID
         }
+    } catch (e: Throwable) {
+        FALLBACK_ID
+    }
 
-    private fun systemWallpaperDrawable(): Drawable? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            wallpaperManager.getDrawable(WallpaperManager.FLAG_SYSTEM)
-        } else {
-            wallpaperManager.drawable
-        }
+    private fun systemWallpaperDrawable(): Drawable? = try {
+        wallpaperManager.drawable
+    } catch (e: Throwable) {
+        null
+    }
 
     private fun drawableToBitmap(drawable: Drawable): Bitmap? {
         if (drawable is BitmapDrawable) {
@@ -70,14 +72,17 @@ class WallpaperProvider(private val context: Context) {
     }
 
     private fun blur(src: Bitmap): Bitmap {
-        val width = maxOf(MIN_BLUR_DIMENSION, src.width / BLUR_DIVISOR)
-        val height = maxOf(MIN_BLUR_DIMENSION, src.height / BLUR_DIVISOR)
-        val downscaled = Bitmap.createScaledBitmap(src, width, height, true)
-        return Bitmap.createScaledBitmap(downscaled, src.width, src.height, true)
+        val downWidth = maxOf(MIN_BLUR_DIMENSION, src.width / BLUR_DIVISOR)
+        val downHeight = maxOf(MIN_BLUR_DIMENSION, src.height / BLUR_DIVISOR)
+        val downscaled = Bitmap.createScaledBitmap(src, downWidth, downHeight, true)
+        val upWidth = maxOf(MIN_BLUR_DIMENSION, src.width / BLUR_FINAL_DIVISOR)
+        val upHeight = maxOf(MIN_BLUR_DIMENSION, src.height / BLUR_FINAL_DIVISOR)
+        return Bitmap.createScaledBitmap(downscaled, upWidth, upHeight, true)
     }
 
     private companion object {
         const val BLUR_DIVISOR = 12
+        const val BLUR_FINAL_DIVISOR = 4
         const val MIN_BLUR_DIMENSION = 64
         const val FALLBACK_ID = 0
     }
