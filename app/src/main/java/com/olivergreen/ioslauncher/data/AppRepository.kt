@@ -35,6 +35,7 @@ class AppRepository(private val context: Context) {
                         .addCategory(Intent.CATEGORY_LAUNCHER)
                         .setComponent(component)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    iconKey = iconCacheKey(activity.packageName, activity.name),
                 )
             }
             .filter { it.packageName != ownPackage }

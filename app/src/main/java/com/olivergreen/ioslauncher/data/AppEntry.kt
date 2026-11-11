@@ -10,4 +10,5 @@ data class AppEntry(
     val className: String,
     val isSystem: Boolean,
     val launchIntent: Intent,
+    val iconKey: String,
 )

@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
-import com.olivergreen.ioslauncher.data.iconCacheKey
 import com.olivergreen.ioslauncher.ui.components.AppIcon
 import com.olivergreen.ioslauncher.ui.theme.GlassWhite
 import kotlin.math.roundToInt
@@ -107,7 +106,7 @@ fun AppDrawer(
                     items(filtered, key = { it.packageName }) { entry ->
                         AppIcon(
                             entry = entry,
-                            icon = icons[iconCacheKey(entry.packageName, entry.className)],
+                            icon = icons[entry.iconKey],
                             showLabel = showLabels,
                             onClick = { onOpen(entry) },
                             onLongClick = onLongPress?.let { { it(entry) } },

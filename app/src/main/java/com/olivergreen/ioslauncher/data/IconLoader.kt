@@ -35,7 +35,17 @@ class IconLoader(context: Context, private val scope: CoroutineScope) {
         cache.get(iconCacheKey(packageName, className))
 
     fun loadAll(entries: List<AppEntry>) {
+        rebuildFor(entries)
         entries.forEach { load(it.packageName, it.className) }
+    }
+
+    fun rebuildFor(entries: List<AppEntry>) {
+        val keys = entries.mapTo(HashSet()) { it.iconKey }
+        scope.launch(Dispatchers.IO) {
+            loadingMutex.withLock {
+                _icons.update { current -> current.filterKeys { it in keys } }
+            }
+        }
     }
 
     fun load(packageName: String, className: String) {

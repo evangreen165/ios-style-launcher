@@ -31,7 +31,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.data.AppTheme
-import com.olivergreen.ioslauncher.data.iconCacheKey
 import com.olivergreen.ioslauncher.ui.AppDrawer
 import com.olivergreen.ioslauncher.ui.HomeScreen
 import com.olivergreen.ioslauncher.ui.components.ContextMenu
@@ -133,7 +132,7 @@ class MainActivity : ComponentActivity() {
                     }
                     ContextMenu(
                         entry = menuEntry,
-                        icon = menuEntry?.let { icons[iconCacheKey(it.packageName, it.className)] },
+                        icon = menuEntry?.let { icons[it.iconKey] },
                         onDismiss = { menuEntry = null },
                         onAppInfo = {
                             menuEntry?.let { context.startActivity(LauncherIntents.appInfo(it.packageName)) }

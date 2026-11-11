@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
-import com.olivergreen.ioslauncher.data.iconCacheKey
 import com.olivergreen.ioslauncher.ui.components.AppIcon
 import com.olivergreen.ioslauncher.ui.components.Dock
 import com.olivergreen.ioslauncher.ui.components.PageDots
@@ -152,7 +151,7 @@ private fun AppPage(
                         val entry = apps[index]
                         AppIcon(
                             entry = entry,
-                            icon = icons[iconCacheKey(entry.packageName, entry.className)],
+                            icon = icons[entry.iconKey],
                             showLabel = showLabels,
                             onClick = { onOpen(entry) },
                             onLongClick = onLongPress?.let { { it(entry) } },

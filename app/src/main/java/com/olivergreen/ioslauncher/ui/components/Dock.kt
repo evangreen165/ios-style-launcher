@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.olivergreen.ioslauncher.data.AppEntry
-import com.olivergreen.ioslauncher.data.iconCacheKey
 import com.olivergreen.ioslauncher.ui.theme.GlassWhite
 import kotlin.math.roundToInt
 
@@ -55,7 +54,7 @@ fun Dock(
                 if (entry != null) {
                     AppIcon(
                         entry = entry,
-                        icon = icons[iconCacheKey(entry.packageName, entry.className)],
+                        icon = icons[entry.iconKey],
                         showLabel = false,
                         onClick = { onOpen(entry) },
                         onLongClick = onLongClick?.let { { it(entry) } },
