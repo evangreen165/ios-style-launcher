@@ -32,7 +32,7 @@ class IconLoader(context: Context, private val scope: CoroutineScope) {
     val icons: StateFlow<Map<String, ImageBitmap>> = _icons.asStateFlow()
 
     fun get(packageName: String, className: String): ImageBitmap? =
-        cache.get(key(packageName, className))
+        cache.get(iconCacheKey(packageName, className))
 
     fun loadAll(entries: List<AppEntry>) {
         entries.forEach { load(it.packageName, it.className) }
@@ -40,7 +40,7 @@ class IconLoader(context: Context, private val scope: CoroutineScope) {
 
     fun load(packageName: String, className: String) {
         scope.launch(Dispatchers.IO) {
-            val cacheKey = key(packageName, className)
+            val cacheKey = iconCacheKey(packageName, className)
             if (cache.get(cacheKey) != null) return@launch
             loadingMutex.withLock {
                 if (cache.get(cacheKey) != null) return@withLock
@@ -68,10 +68,10 @@ class IconLoader(context: Context, private val scope: CoroutineScope) {
         return bitmap
     }
 
-    private fun key(packageName: String, className: String): String = "$packageName/$className"
-
     private companion object {
         const val ICON_SIZE_PX = 144
         const val CACHE_SIZE_BYTES = 8 * 1024 * 1024
     }
 }
+
+fun iconCacheKey(packageName: String, className: String): String = "$packageName/$className"
