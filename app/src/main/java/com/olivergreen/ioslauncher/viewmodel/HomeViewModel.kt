@@ -8,6 +8,7 @@ import com.olivergreen.ioslauncher.data.AppRepository
 import com.olivergreen.ioslauncher.data.AppTheme
 import com.olivergreen.ioslauncher.data.IconLoader
 import com.olivergreen.ioslauncher.data.SettingsStore
+import com.olivergreen.ioslauncher.data.mergePinnedFirst
 import com.olivergreen.ioslauncher.util.WallpaperProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,13 +42,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     val combinedApps: StateFlow<List<AppEntry>> =
         combine(apps, pinnedOrder) { list, pinned ->
-            if (list.isEmpty()) {
-                emptyList()
-            } else {
-                val pinnedValid = pinned.mapNotNull { pkg -> list.firstOrNull { it.packageName == pkg } }
-                val pinnedKeys = pinnedValid.mapTo(mutableSetOf()) { it.packageName }
-                pinnedValid + list.filter { it.packageName !in pinnedKeys }
-            }
+            mergePinnedFirst(list, pinned)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {

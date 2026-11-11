@@ -37,6 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
+import com.olivergreen.ioslauncher.data.HOME_CELLS_PER_PAGE
+import com.olivergreen.ioslauncher.data.HOME_COLUMNS
+import com.olivergreen.ioslauncher.data.HOME_ROWS
+import com.olivergreen.ioslauncher.data.pageCountFor
 import com.olivergreen.ioslauncher.ui.components.AppIcon
 import com.olivergreen.ioslauncher.ui.components.Dock
 import com.olivergreen.ioslauncher.ui.components.PageDots
@@ -44,12 +48,9 @@ import com.olivergreen.ioslauncher.ui.components.WallpaperBackdrop
 import com.olivergreen.ioslauncher.ui.theme.White
 import com.olivergreen.ioslauncher.viewmodel.HomeViewModel
 
-private const val COLUMNS = 4
-private const val ROWS = 6
-private const val CELLS_PER_PAGE = COLUMNS * ROWS
-
-fun pageCountFor(appCount: Int): Int =
-    if (appCount <= 0) 1 else (appCount + CELLS_PER_PAGE - 1) / CELLS_PER_PAGE
+private const val COLUMNS = HOME_COLUMNS
+private const val ROWS = HOME_ROWS
+private const val CELLS_PER_PAGE = HOME_CELLS_PER_PAGE
 
 @Composable
 fun HomeScreen(
