@@ -1,7 +1,7 @@
 package com.olivergreen.ioslauncher.ui
 
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,27 +12,36 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.data.iconCacheKey
 import com.olivergreen.ioslauncher.ui.components.AppIcon
 import com.olivergreen.ioslauncher.ui.components.Dock
 import com.olivergreen.ioslauncher.ui.components.PageDots
 import com.olivergreen.ioslauncher.ui.components.WallpaperBackdrop
+import com.olivergreen.ioslauncher.ui.theme.White
 import com.olivergreen.ioslauncher.viewmodel.HomeViewModel
-import kotlin.math.abs
 
 private const val COLUMNS = 4
 private const val ROWS = 6
@@ -88,6 +97,11 @@ fun HomeScreen(
                 current = pagerState.currentPage,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
+            Spacer(Modifier.height(8.dp))
+            SearchPill(
+                onClick = onOpenDrawer,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
             Spacer(Modifier.height(10.dp))
             Dock(
                 pinned = apps.take(4),
@@ -136,32 +150,34 @@ private fun AppPage(
     }
 }
 
-private fun Modifier.onVerticalSwipe(
-    onSwipeUp: () -> Unit,
-    onSwipeDown: () -> Unit,
-): Modifier = pointerInput(Unit) {
-    val threshold = 80.dp.toPx()
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false)
-            var totalX = 0f
-            var totalY = 0f
-            var horizontalConsumed = false
-            while (true) {
-                val event = awaitPointerEvent()
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (change.isConsumed) {
-                    horizontalConsumed = true
-                    break
-                }
-                val delta = change.position - change.previousPosition
-                totalX += delta.x
-                totalY += delta.y
-                if (event.type == PointerEventType.Release) {
-                    break
-                }
-            }
-            if (!horizontalConsumed && totalY != 0f && abs(totalY) > threshold && abs(totalX) < abs(totalY) * 0.6f) {
-                if (totalY < 0f) onSwipeUp() else onSwipeDown()
-            }
+@Composable
+private fun SearchPill(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .width(168.dp)
+            .height(34.dp)
+            .clip(RoundedCornerShape(17.dp))
+            .background(Color(0x59000000))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = White.copy(alpha = 0.85f),
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = "Поиск",
+                color = White.copy(alpha = 0.85f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
+    }
 }
