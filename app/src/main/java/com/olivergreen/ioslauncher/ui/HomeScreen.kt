@@ -26,8 +26,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,10 +53,18 @@ import com.olivergreen.ioslauncher.ui.components.PageDots
 import com.olivergreen.ioslauncher.ui.components.WallpaperBackdrop
 import com.olivergreen.ioslauncher.ui.theme.White
 import com.olivergreen.ioslauncher.viewmodel.HomeViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlinx.coroutines.delay
 
 private const val COLUMNS = HOME_COLUMNS
 private const val ROWS = HOME_ROWS
 private const val CELLS_PER_PAGE = HOME_CELLS_PER_PAGE
+
+private val ClockFormat = DateTimeFormatter.ofPattern("HH:mm")
+private val DateFormat = DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale("ru"))
+private val MonthFormat = DateTimeFormatter.ofPattern("LLLL", Locale("ru"))
 
 @Composable
 fun HomeScreen(
@@ -67,7 +79,12 @@ fun HomeScreen(
     val showLabels by viewModel.showLabels.collectAsState()
     val context = LocalContext.current
 
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCountFor(apps.size) })
+    val pagerState = rememberPagerState(
+        initialPage = 1,
+        pageCount = {
+            1 + if (apps.isEmpty()) 0 else pageCountFor(apps.size)
+        },
+    )
 
     Box(
         Modifier
@@ -88,18 +105,22 @@ fun HomeScreen(
                 state = pagerState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
             ) { page ->
-                AppPage(
-                    page = page,
-                    apps = apps,
-                    icons = icons,
-                    showLabels = showLabels,
-                    onOpen = { entry -> context.startActivity(entry.launchIntent) },
-                    onLongPress = onLongPress,
-                )
+                if (page == 0) {
+                    TodayPage()
+                } else {
+                    AppPage(
+                        page = page - 1,
+                        apps = apps,
+                        icons = icons,
+                        showLabels = showLabels,
+                        onOpen = { entry -> context.startActivity(entry.launchIntent) },
+                        onLongPress = onLongPress,
+                    )
+                }
             }
             PageDots(
-                count = pagerState.pageCount,
-                current = pagerState.currentPage,
+                count = (pagerState.pageCount - 1).coerceAtLeast(0),
+                current = (pagerState.currentPage - 1).coerceAtLeast(0),
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Spacer(Modifier.height(8.dp))
@@ -133,6 +154,96 @@ fun HomeScreen(
         }
     }
 }
+
+@Composable
+private fun TodayPage() {
+    var now by remember { mutableStateOf(LocalDateTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            now = LocalDateTime.now()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, end = 20.dp, top = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color(0x59000000))
+                .padding(horizontal = 22.dp, vertical = 26.dp),
+        ) {
+            Text(
+                text = now.format(ClockFormat),
+                color = Color.White,
+                fontSize = 54.sp,
+                fontWeight = FontWeight.Light,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = now.format(DateFormat),
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            TodayMiniCard(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = now.dayOfMonth.toString(),
+                    color = Color.White,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Light,
+                )
+                Text(
+                    text = now.format(MonthFormat).capitalizeFirst(),
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 13.sp,
+                )
+            }
+            TodayMiniCard(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Сегодня",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(Modifier.height(6.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(Modifier.width(64.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.25f)))
+                    Box(Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.18f)))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayMiniCard(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0x4D000000))
+            .padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        content()
+    }
+}
+
+private fun String.capitalizeFirst(): String =
+    if (isEmpty()) this else replaceFirstChar { it.uppercase(Locale("ru")) }
 
 @Composable
 private fun AppPage(
