@@ -43,6 +43,7 @@ fun AppDrawer(
     onOpen: (AppEntry) -> Unit,
     onLongPress: ((AppEntry) -> Unit)?,
     onClose: () -> Unit,
+    onOpenSettings: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
@@ -81,6 +82,7 @@ fun AppDrawer(
                 query = query,
                 onQueryChange = { query = it },
                 onClose = onClose,
+                onOpenSettings = onOpenSettings,
             )
             if (filtered.isEmpty()) {
                 Box(

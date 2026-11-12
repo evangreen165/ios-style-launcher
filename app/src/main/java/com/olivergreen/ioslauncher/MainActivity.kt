@@ -103,7 +103,6 @@ class MainActivity : ComponentActivity() {
                     HomeScreen(
                         viewModel = viewModel,
                         onOpenDrawer = { drawerVisible = true },
-                        onOpenSettings = { settingsVisible = true },
                         onLongPress = onLongPress,
                     )
                     if (!firstRunDone && !isDefault) {
@@ -128,6 +127,7 @@ class MainActivity : ComponentActivity() {
                             onOpen = onOpenApp,
                             onLongPress = onLongPress,
                             onClose = { drawerVisible = false },
+                            onOpenSettings = { settingsVisible = true },
                         )
                     }
                     ContextMenu(
