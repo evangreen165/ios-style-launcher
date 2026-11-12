@@ -21,42 +21,33 @@ data class LauncherColors(
     val wallpaperFallbackEnd: Color,
 )
 
-val DarkLauncherColors = LauncherColors(
-    panel = Color(0xE61C1C20),
-    glassTint = Color(0x33FFFFFF),
-    cardBackground = Color(0x59000000),
-    pillBackground = Color(0x59000000),
-    searchField = Color(0xE6202024),
-    fieldText = Color(0xFFFFFFFF),
-    textPrimary = Color(0xFFFFFFFF),
-    textSecondary = Color(0xCCFFFFFF),
-    labelText = Color(0xFFFFFFFF),
-    highlight = Color(0x59FFFFFF),
-    wallpaperFallbackStart = Color(0xFF243B55),
-    wallpaperFallbackEnd = Color(0xFF0B0D12),
-)
-
-val LightLauncherColors = LauncherColors(
-    panel = Color(0xE6FFFFFF),
-    glassTint = Color(0x66FFFFFF),
-    cardBackground = Color(0xB3FFFFFF),
-    pillBackground = Color(0x59FFFFFF),
-    searchField = Color(0xE6FFFFFF),
-    fieldText = Color(0xFF1C1C1E),
-    textPrimary = Color(0xFF1C1C1E),
-    textSecondary = Color(0xCC3C3C43),
-    labelText = Color(0xFF1C1C1E),
-    highlight = Color(0x59FFFFFF),
-    wallpaperFallbackStart = Color(0xFFB8C6DB),
-    wallpaperFallbackEnd = Color(0xFF5A6E8A),
-)
-
-val LocalLauncherColors = staticCompositionLocalOf { DarkLauncherColors }
+val LocalLauncherColors = staticCompositionLocalOf { defaultLauncherColors }
 
 val LocalGlassEnabled = staticCompositionLocalOf { true }
+
+val LocalLauncherIsDark = staticCompositionLocalOf { true }
+
+val defaultLauncherColors: LauncherColors
+    get() = LauncherColors(
+        panel = Color(0xE61C1C20),
+        glassTint = Color(0x33FFFFFF),
+        cardBackground = Color(0x59000000),
+        pillBackground = Color(0x59000000),
+        searchField = Color(0xE6202024),
+        fieldText = Color(0xFFFFFFFF),
+        textPrimary = Color(0xFFFFFFFF),
+        textSecondary = Color(0xCCFFFFFF),
+        labelText = Color(0xFFFFFFFF),
+        highlight = Color(0x59FFFFFF),
+        wallpaperFallbackStart = Color(0xFF243B55),
+        wallpaperFallbackEnd = Color(0xFF0B0D12),
+    )
 
 @Composable
 fun launcherColors(): LauncherColors = LocalLauncherColors.current
 
 @Composable
 fun glassEnabled(): Boolean = LocalGlassEnabled.current
+
+@Composable
+fun launcherIsDark(): Boolean = LocalLauncherIsDark.current

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -82,7 +83,7 @@ fun ContextMenu(
                     Modifier
                         .widthIn(max = 300.dp)
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xF21E1E22))
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -120,13 +121,13 @@ fun ContextMenu(
                             Column(Modifier.padding(start = 12.dp)) {
                                 Text(
                                     text = entry.label,
-                                    color = White,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
                                     text = entry.packageName,
-                                    color = White.copy(alpha = 0.6f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     fontSize = 12.sp,
                                 )
                             }
@@ -134,12 +135,14 @@ fun ContextMenu(
                         ContextMenuItem(
                             icon = Icons.Filled.Info,
                             text = "О приложении",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             onClick = { onAppInfo(); onDismiss() },
                         )
                         if (onRemoveFromHome != null) {
                             ContextMenuItem(
                                 icon = Icons.Filled.Home,
                                 text = "Убрать с экрана",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                 onClick = { onRemoveFromHome(); onDismiss() },
                             )
                         }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -27,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppTheme
-import com.olivergreen.ioslauncher.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,14 +41,15 @@ fun SettingsSheet(
     onResetLayout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1E1E22),
+        containerColor = scheme.surface,
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
             Text(
                 text = "Настройки",
-                color = White,
+                color = scheme.onSurface,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 16.dp),
@@ -58,10 +59,10 @@ fun SettingsSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(text = "Подписи", color = White, fontSize = 15.sp)
+                    Text(text = "Подписи", color = scheme.onSurface, fontSize = 15.sp)
                     Text(
                         text = "Показывать названия под иконками",
-                        color = White.copy(alpha = 0.6f),
+                        color = scheme.onSurface.copy(alpha = 0.6f),
                         fontSize = 12.sp,
                     )
                 }
@@ -69,8 +70,8 @@ fun SettingsSheet(
                     checked = showLabels,
                     onCheckedChange = onShowLabelsChange,
                     colors = SwitchDefaults.colors(
-                        checkedTrackColor = Color(0xFF1D6FA5),
-                        checkedThumbColor = White,
+                        checkedTrackColor = scheme.primary,
+                        checkedThumbColor = scheme.onPrimary,
                     ),
                 )
             }
@@ -80,10 +81,10 @@ fun SettingsSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(text = "Эффект матового стекла", color = White, fontSize = 15.sp)
+                    Text(text = "Эффект матового стекла", color = scheme.onSurface, fontSize = 15.sp)
                     Text(
                         text = "Полупрозрачные панели (выкл. — сплошной цвет, экономия батареи)",
-                        color = White.copy(alpha = 0.6f),
+                        color = scheme.onSurface.copy(alpha = 0.6f),
                         fontSize = 12.sp,
                     )
                 }
@@ -91,25 +92,25 @@ fun SettingsSheet(
                     checked = glassEffect,
                     onCheckedChange = onGlassEffectChange,
                     colors = SwitchDefaults.colors(
-                        checkedTrackColor = Color(0xFF1D6FA5),
-                        checkedThumbColor = White,
+                        checkedTrackColor = scheme.primary,
+                        checkedThumbColor = scheme.onPrimary,
                     ),
                 )
             }
             Spacer(Modifier.height(20.dp))
-            Text(text = "Тема", color = White, fontSize = 15.sp)
+            Text(text = "Тема", color = scheme.onSurface, fontSize = 15.sp)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ThemeOption("Авто", theme == AppTheme.AUTO) { onThemeChange(AppTheme.AUTO) }
-                ThemeOption("Светлая", theme == AppTheme.LIGHT) { onThemeChange(AppTheme.LIGHT) }
-                ThemeOption("Тёмная", theme == AppTheme.DARK) { onThemeChange(AppTheme.DARK) }
+                ThemeOption("Авто", theme == AppTheme.AUTO, scheme) { onThemeChange(AppTheme.AUTO) }
+                ThemeOption("Светлая", theme == AppTheme.LIGHT, scheme) { onThemeChange(AppTheme.LIGHT) }
+                ThemeOption("Тёмная", theme == AppTheme.DARK, scheme) { onThemeChange(AppTheme.DARK) }
             }
             Spacer(Modifier.height(20.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x33FFFFFF))
+                    .background(scheme.onSurface.copy(alpha = 0.08f))
                     .clickable(onClick = onResetLayout)
                     .padding(14.dp),
                 contentAlignment = Alignment.Center,
@@ -129,12 +130,15 @@ fun SettingsSheet(
 private fun ThemeOption(
     label: String,
     selected: Boolean,
+    scheme: androidx.compose.material3.ColorScheme,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(if (selected) Color(0xFF1D6FA5) else Color(0x33FFFFFF))
+            .background(
+                if (selected) scheme.primary else scheme.onSurface.copy(alpha = 0.08f),
+            )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -144,7 +148,7 @@ private fun ThemeOption(
     ) {
         Text(
             text = label,
-            color = if (selected) White else White.copy(alpha = 0.7f),
+            color = if (selected) scheme.onPrimary else scheme.onSurface.copy(alpha = 0.7f),
             fontSize = 13.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
         )
