@@ -39,6 +39,7 @@ class AppRepository(private val context: Context) {
                 )
             }
             .filter { it.packageName != ownPackage }
+            .distinctBy { it.packageName }
             .toList()
             .let { sortAppsByLabel(it, collator) }
     }

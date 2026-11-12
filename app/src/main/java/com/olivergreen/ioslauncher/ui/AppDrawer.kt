@@ -104,7 +104,7 @@ fun AppDrawer(
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
                     horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(2.dp),
                 ) {
-                    items(filtered, key = { it.packageName }) { entry ->
+                    items(filtered, key = { it.iconKey }) { entry ->
                         AppIcon(
                             entry = entry,
                             icon = icons[entry.iconKey],
