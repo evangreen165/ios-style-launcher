@@ -30,8 +30,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
+import com.olivergreen.ioslauncher.ui.theme.launcherColors
 import java.text.Normalizer
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 @Composable
 fun SearchField(
@@ -42,7 +44,11 @@ fun SearchField(
     modifier: Modifier = Modifier,
 ) {
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    LaunchedEffect(Unit) {
+        delay(200)
+        focusRequester.requestFocus()
+    }
+    val colors = launcherColors()
 
     Row(
         modifier = modifier
@@ -54,25 +60,25 @@ fun SearchField(
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xE6202024)),
+                .background(colors.searchField),
         ) {
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 placeholder = {
-                    Text("Поиск", color = Color.White.copy(alpha = 0.6f), fontSize = 16.sp)
+                    Text("Поиск", color = colors.textSecondary, fontSize = 16.sp)
                 },
                 singleLine = true,
-                textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                textStyle = TextStyle(color = colors.fieldText, fontSize = 16.sp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    cursorColor = colors.fieldText,
+                    focusedTextColor = colors.fieldText,
+                    unfocusedTextColor = colors.fieldText,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             )
@@ -82,7 +88,7 @@ fun SearchField(
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Настройки",
-                    tint = Color.White.copy(alpha = 0.9f),
+                    tint = colors.textPrimary,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -91,7 +97,7 @@ fun SearchField(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Закрыть",
-                tint = Color.White.copy(alpha = 0.9f),
+                tint = colors.textPrimary,
             )
         }
     }

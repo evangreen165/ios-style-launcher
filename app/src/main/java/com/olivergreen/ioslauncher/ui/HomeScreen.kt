@@ -49,7 +49,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -65,7 +67,7 @@ import com.olivergreen.ioslauncher.ui.components.AppIcon
 import com.olivergreen.ioslauncher.ui.components.Dock
 import com.olivergreen.ioslauncher.ui.components.PageDots
 import com.olivergreen.ioslauncher.ui.components.WallpaperBackdrop
-import com.olivergreen.ioslauncher.ui.theme.White
+import com.olivergreen.ioslauncher.ui.theme.launcherColors
 import com.olivergreen.ioslauncher.viewmodel.HomeViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -113,6 +115,10 @@ fun HomeScreen(
     var dragging by remember { mutableStateOf<AppEntry?>(null) }
     var dragCenter by remember { mutableStateOf(Offset.Zero) }
     var dropTarget by remember { mutableStateOf<DropTarget?>(null) }
+    var boxWidthPx by remember { mutableStateOf(0f) }
+    var settleTick by remember { mutableStateOf(0) }
+    var lastAutoScrollAt by remember { mutableStateOf(0L) }
+    val dragEdgePx = with(LocalDensity.current) { 44.dp.toPx() }
 
     val onDragMove: (Offset) -> Unit = { root ->
         dragCenter = root
@@ -125,12 +131,16 @@ fun HomeScreen(
     val onDragDrop: (Offset) -> Unit = {
         val entry = dragging
         val target = dropTarget
-        if (entry != null && target != null) {
-            viewModel.moveToIndex(entry.packageName, target.index)
-        }
+        val wasDock = target?.inDock == true
         dragging = null
         dropTarget = null
         dragCenter = Offset.Zero
+        if (entry != null && target != null) {
+            viewModel.moveToIndex(entry.packageName, target.index)
+            if (wasDock) {
+                settleTick += 1
+            }
+        }
     }
 
     val startDrag: (AppEntry) -> Unit = { entry ->
@@ -138,9 +148,26 @@ fun HomeScreen(
         dragging = entry
     }
 
+    LaunchedEffect(dragging, dragCenter, boxWidthPx) {
+        val d = dragging ?: return@LaunchedEffect
+        val now = android.os.SystemClock.uptimeMillis()
+        if (now - lastAutoScrollAt < 400) return@LaunchedEffect
+        val page = pagerState.currentPage
+        val canGoLeft = dragCenter.x < dragEdgePx && page > 0
+        val canGoRight = dragCenter.x > boxWidthPx - dragEdgePx && page < pagerState.pageCount - 1
+        if (canGoLeft) {
+            lastAutoScrollAt = now
+            pagerState.scrollToPage(page - 1)
+        } else if (canGoRight) {
+            lastAutoScrollAt = now
+            pagerState.scrollToPage(page + 1)
+        }
+    }
+
     Box(
         Modifier
             .fillMaxSize()
+            .onSizeChanged { boxWidthPx = it.width.toFloat() }
             .onVerticalSwipe(
                 onSwipeUp = onOpenDrawer,
                 onSwipeDown = {},
@@ -197,6 +224,7 @@ fun HomeScreen(
                 onDragEnd = onDragDrop,
                 dropSlot = dropTarget?.takeIf { it.inDock }?.index,
                 registerSlot = { index, rect -> dockRects[index] = rect },
+                settleTick = settleTick,
             )
         }
         dragging?.let { entry ->
@@ -259,6 +287,7 @@ private fun TodayPage() {
             now = LocalDateTime.now()
         }
     }
+    val colors = launcherColors()
 
     Column(
         modifier = Modifier
@@ -270,20 +299,20 @@ private fun TodayPage() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(28.dp))
-                .background(Color(0x59000000))
+                .background(colors.cardBackground)
                 .pressScale()
                 .padding(horizontal = 22.dp, vertical = 26.dp),
         ) {
             Text(
                 text = now.format(ClockFormat),
-                color = Color.White,
+                color = colors.textPrimary,
                 fontSize = 54.sp,
                 fontWeight = FontWeight.Light,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = now.format(DateFormat),
-                color = Color.White.copy(alpha = 0.85f),
+                color = colors.textSecondary,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -295,27 +324,27 @@ private fun TodayPage() {
             TodayMiniCard(modifier = Modifier.weight(1f)) {
                 Text(
                     text = now.dayOfMonth.toString(),
-                    color = Color.White,
+                    color = colors.textPrimary,
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Light,
                 )
                 Text(
                     text = now.format(MonthFormat).capitalizeFirst(),
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = colors.textSecondary,
                     fontSize = 13.sp,
                 )
             }
             TodayMiniCard(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Сегодня",
-                    color = Color.White,
+                    color = colors.textPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                 )
                 Spacer(Modifier.height(6.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(Modifier.width(64.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.25f)))
-                    Box(Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.18f)))
+                    Box(Modifier.width(64.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(colors.textSecondary.copy(alpha = 0.35f)))
+                    Box(Modifier.width(48.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(colors.textSecondary.copy(alpha = 0.25f)))
                 }
             }
         }
@@ -327,11 +356,12 @@ private fun TodayMiniCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val colors = launcherColors()
     Column(
         modifier = modifier
             .pressScale()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0x4D000000))
+            .background(colors.cardBackground)
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -420,12 +450,13 @@ private fun SearchPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = launcherColors()
     Box(
         modifier = modifier
             .width(168.dp)
             .height(34.dp)
             .clip(RoundedCornerShape(17.dp))
-            .background(Color(0x59000000))
+            .background(colors.pillBackground)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -433,13 +464,13 @@ private fun SearchPill(
             Icon(
                 imageVector = Icons.Filled.Search,
                 contentDescription = null,
-                tint = White.copy(alpha = 0.85f),
+                tint = colors.textPrimary.copy(alpha = 0.85f),
                 modifier = Modifier.size(16.dp),
             )
             Spacer(Modifier.width(6.dp))
             Text(
                 text = "Поиск",
-                color = White.copy(alpha = 0.85f),
+                color = colors.textPrimary.copy(alpha = 0.85f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
             )

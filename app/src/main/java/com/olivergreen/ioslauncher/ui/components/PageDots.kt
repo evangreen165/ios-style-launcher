@@ -26,13 +26,13 @@ fun PageDots(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(count) { index ->
             val active = index == current
             val width by animateDpAsState(
-                targetValue = if (active) 18.dp else 7.dp,
+                targetValue = if (active) 16.dp else 6.dp,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessMedium,
@@ -42,9 +42,9 @@ fun PageDots(
             Box(
                 Modifier
                     .width(width)
-                    .height(7.dp)
-                    .clip(RoundedCornerShape(3.5.dp))
-                    .background(if (active) Color.White else Color.White.copy(alpha = 0.4f)),
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(if (active) Color.White else Color.White.copy(alpha = 0.35f)),
             )
         }
     }

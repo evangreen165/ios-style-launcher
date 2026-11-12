@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.ui.components.AppIcon
-import com.olivergreen.ioslauncher.ui.theme.GlassWhite
+import com.olivergreen.ioslauncher.ui.theme.glassEnabled
+import com.olivergreen.ioslauncher.ui.theme.launcherColors
 import kotlin.math.roundToInt
 
 @Composable
@@ -54,6 +55,9 @@ fun AppDrawer(
 
     BackHandler(onBack = onClose)
 
+    val colors = launcherColors()
+    val glassOn = glassEnabled()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -68,14 +72,16 @@ fun AppDrawer(
     ) {
         Box(Modifier.fillMaxSize().graphicsLayer { }) {
             Canvas(Modifier.fillMaxSize()) {
-                drawRect(color = Color(0xFF101216))
-                if (blurred != null) {
-                    drawImage(
-                        image = blurred,
-                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                    )
+                drawRect(color = colors.panel)
+                if (glassOn) {
+                    if (blurred != null) {
+                        drawImage(
+                            image = blurred,
+                            dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                        )
+                    }
+                    drawRect(color = colors.glassTint)
                 }
-                drawRect(color = GlassWhite)
             }
         }
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
@@ -92,7 +98,7 @@ fun AppDrawer(
                 ) {
                     Text(
                         text = "Ничего не найдено",
-                        color = Color.White.copy(alpha = 0.75f),
+                        color = colors.textSecondary,
                         fontSize = 15.sp,
                     )
                 }

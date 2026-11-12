@@ -49,6 +49,7 @@ import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.ui.theme.LabelShadow
 import com.olivergreen.ioslauncher.ui.theme.PlaceholderBlue
 import com.olivergreen.ioslauncher.ui.theme.White
+import com.olivergreen.ioslauncher.ui.theme.launcherColors
 import kotlin.math.abs
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -78,6 +79,7 @@ fun AppIcon(
         label = "iconScale",
     )
     var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val colors = launcherColors()
 
     Column(
         modifier = modifier
@@ -108,7 +110,7 @@ fun AppIcon(
                 .clip(SquircleShape())
                 .then(
                     if (highlighted) {
-                        Modifier.background(Color(0x59FFFFFF))
+                        Modifier.background(colors.highlight)
                     } else {
                         Modifier
                     }
@@ -133,7 +135,7 @@ fun AppIcon(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
                 style = TextStyle(
-                    color = White,
+                    color = colors.labelText,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     shadow = Shadow(
