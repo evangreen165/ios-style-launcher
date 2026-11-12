@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,14 +65,16 @@ fun AppDrawer(
                 },
             ),
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            if (blurred != null) {
-                drawImage(
-                    image = blurred,
-                    dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                )
+        Box(Modifier.fillMaxSize().graphicsLayer { }) {
+            Canvas(Modifier.fillMaxSize()) {
+                if (blurred != null) {
+                    drawImage(
+                        image = blurred,
+                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                    )
+                }
+                drawRect(color = GlassWhite)
             }
-            drawRect(color = GlassWhite)
         }
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
             SearchField(
