@@ -17,13 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -33,7 +29,6 @@ import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.ui.theme.launcherColors
 import java.text.Normalizer
 import java.util.Locale
-import kotlinx.coroutines.delay
 
 @Composable
 fun SearchField(
@@ -43,11 +38,6 @@ fun SearchField(
     onOpenSettings: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        delay(200)
-        focusRequester.requestFocus()
-    }
     val colors = launcherColors()
 
     Row(
@@ -65,7 +55,7 @@ fun SearchField(
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text("Поиск", color = colors.textSecondary, fontSize = 16.sp)
                 },
