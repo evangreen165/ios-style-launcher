@@ -185,6 +185,7 @@ private fun Modifier.iconDragGestures(
             null -> {
                 var dragging = false
                 var last = down.position
+                var ended = false
                 while (true) {
                     val event = awaitPointerEvent()
                     val change = event.changes.firstOrNull { it.id == down.id } ?: break
@@ -196,6 +197,7 @@ private fun Modifier.iconDragGestures(
                     }
                     if (dragging) onDrag?.invoke(last)
                     if (event.type == PointerEventType.Release) {
+                        ended = true
                         if (dragging) {
                             onDragEnd?.invoke(last)
                         } else {
@@ -203,6 +205,9 @@ private fun Modifier.iconDragGestures(
                         }
                         break
                     }
+                }
+                if (dragging && !ended) {
+                    onDragEnd?.invoke(last)
                 }
             }
         }

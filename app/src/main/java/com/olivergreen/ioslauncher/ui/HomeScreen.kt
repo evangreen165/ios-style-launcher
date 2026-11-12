@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +75,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val COLUMNS = HOME_COLUMNS
 private const val ROWS = HOME_ROWS
@@ -113,15 +117,21 @@ fun HomeScreen(
     val gridRects = remember { mutableStateMapOf<Int, Rect>() }
     val dockRects = remember { mutableStateMapOf<Int, Rect>() }
     var dragging by remember { mutableStateOf<AppEntry?>(null) }
-    var dragCenter by remember { mutableStateOf(Offset.Zero) }
+    var dragOriginIndex by remember { mutableStateOf(-1) }
+    val dragX = remember { Animatable(0f) }
+    val dragY = remember { Animatable(0f) }
     var dropTarget by remember { mutableStateOf<DropTarget?>(null) }
     var boxWidthPx by remember { mutableStateOf(0f) }
     var settleTick by remember { mutableStateOf(0) }
     var lastAutoScrollAt by remember { mutableStateOf(0L) }
     val dragEdgePx = with(LocalDensity.current) { 44.dp.toPx() }
+    val scope = rememberCoroutineScope()
 
     val onDragMove: (Offset) -> Unit = { root ->
-        dragCenter = root
+        scope.launch {
+            dragX.snapTo(root.x)
+            dragY.snapTo(root.y)
+        }
         dropTarget = dockRects.entries.firstOrNull { it.value.contains(root) }
             ?.let { DropTarget(index = it.key, inDock = true) }
             ?: gridRects.entries.firstOrNull { it.value.contains(root) }
@@ -131,30 +141,50 @@ fun HomeScreen(
     val onDragDrop: (Offset) -> Unit = {
         val entry = dragging
         val target = dropTarget
+        val valid = entry != null && target != null
         val wasDock = target?.inDock == true
-        dragging = null
-        dropTarget = null
-        dragCenter = Offset.Zero
-        if (entry != null && target != null) {
-            viewModel.moveToIndex(entry.packageName, target.index)
+        val originIndex = dragOriginIndex
+        val returnSpec: androidx.compose.animation.core.AnimationSpec<Float> = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        )
+        scope.launch {
+            if (!valid && entry != null) {
+                val originRect = gridRects[originIndex] ?: dockRects[originIndex]
+                if (originRect != null) {
+                    coroutineScope {
+                        launch { dragX.animateTo(originRect.center.x, returnSpec) }
+                        launch { dragY.animateTo(originRect.center.y, returnSpec) }
+                    }
+                }
+            }
+            dragging = null
+            dropTarget = null
+            dragOriginIndex = -1
+            dragX.snapTo(0f)
+            dragY.snapTo(0f)
+        }
+        if (valid) {
+            viewModel.moveToIndex(entry!!.packageName, target!!.index)
             if (wasDock) {
                 settleTick += 1
             }
         }
     }
 
-    val startDrag: (AppEntry) -> Unit = { entry ->
+    val startDrag: (AppEntry, Int) -> Unit = { entry, index ->
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         dragging = entry
+        dragOriginIndex = index
     }
 
-    LaunchedEffect(dragging, dragCenter, boxWidthPx) {
+    LaunchedEffect(dragging, dragX.value, dragY.value, boxWidthPx) {
         val d = dragging ?: return@LaunchedEffect
         val now = android.os.SystemClock.uptimeMillis()
         if (now - lastAutoScrollAt < 400) return@LaunchedEffect
         val page = pagerState.currentPage
-        val canGoLeft = dragCenter.x < dragEdgePx && page > 0
-        val canGoRight = dragCenter.x > boxWidthPx - dragEdgePx && page < pagerState.pageCount - 1
+        val canGoLeft = dragX.value < dragEdgePx && page > 0
+        val canGoRight = dragX.value > boxWidthPx - dragEdgePx && page < pagerState.pageCount - 1
         if (canGoLeft) {
             lastAutoScrollAt = now
             pagerState.scrollToPage(page - 1)
@@ -194,7 +224,7 @@ fun HomeScreen(
                         showLabels = showLabels,
                         onOpen = { entry -> context.startActivity(entry.launchIntent) },
                         onLongPress = onLongPress,
-                        onDragStart = { entry -> startDrag(entry) },
+                        onDragStart = { entry, index -> startDrag(entry, index) },
                         onDrag = onDragMove,
                         onDragEnd = onDragDrop,
                         highlightedIndex = dropTarget?.takeIf { !it.inDock }?.index,
@@ -219,7 +249,7 @@ fun HomeScreen(
                 blurred = wallpaper?.blurred,
                 onOpen = { entry -> context.startActivity(entry.launchIntent) },
                 onLongClick = onLongPress,
-                onDragStart = { entry -> startDrag(entry) },
+                onDragStart = { entry, index -> startDrag(entry, index) },
                 onDrag = onDragMove,
                 onDragEnd = onDragDrop,
                 dropSlot = dropTarget?.takeIf { it.inDock }?.index,
@@ -235,8 +265,8 @@ fun HomeScreen(
                     .zIndex(10f)
                     .offset {
                         IntOffset(
-                            (dragCenter.x - overlaySizePx / 2f).roundToInt(),
-                            (dragCenter.y - overlaySizePx / 2f).roundToInt(),
+                            (dragX.value - overlaySizePx / 2f).roundToInt(),
+                            (dragY.value - overlaySizePx / 2f).roundToInt(),
                         )
                     }
                     .size(OVERLAY_ICON_SIZE)
@@ -403,7 +433,7 @@ private fun AppPage(
     showLabels: Boolean,
     onOpen: (AppEntry) -> Unit,
     onLongPress: ((AppEntry) -> Unit)?,
-    onDragStart: ((AppEntry) -> Unit)?,
+    onDragStart: ((AppEntry, Int) -> Unit)?,
     onDrag: ((Offset) -> Unit)?,
     onDragEnd: ((Offset) -> Unit)?,
     highlightedIndex: Int?,
@@ -425,7 +455,7 @@ private fun AppPage(
                             showLabel = showLabels,
                             onClick = { onOpen(entry) },
                             onLongClick = onLongPress?.let { { it(entry) } },
-                            onDragStart = onDragStart?.let { { it(entry) } },
+                            onDragStart = onDragStart?.let { { it(entry, index) } },
                             onDrag = onDrag,
                             onDragEnd = onDragEnd,
                             highlighted = highlightedIndex == index,
