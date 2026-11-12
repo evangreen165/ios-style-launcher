@@ -3,12 +3,18 @@ package com.olivergreen.ioslauncher.util
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import java.io.FileInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,9 +39,8 @@ class WallpaperProvider(private val context: Context) {
 
     suspend fun refresh() = withContext(Dispatchers.IO) {
         val id = currentWallpaperId()
-        if (id == currentId) return@withContext
-        val drawable = systemWallpaperDrawable() ?: return@withContext
-        val full = drawableToBitmap(drawable) ?: return@withContext
+        if (id == currentId && _wallpaper.value != null) return@withContext
+        val full = loadWallpaperBitmap() ?: gradientFallback()
         val blurred = blur(full)
         currentId = id
         _wallpaper.value = WallpaperData(id, full.asImageBitmap(), blurred.asImageBitmap())
@@ -51,13 +56,30 @@ class WallpaperProvider(private val context: Context) {
         FALLBACK_ID
     }
 
-    private fun systemWallpaperDrawable(): Drawable? = try {
-        wallpaperManager.drawable
-    } catch (e: Throwable) {
-        null
+    private fun loadWallpaperBitmap(): Bitmap? {
+        val drawable = try {
+            wallpaperManager.getFastDrawable() ?: wallpaperManager.drawable
+        } catch (e: Throwable) {
+            null
+        }
+        drawableToBitmap(drawable)?.let { return it }
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                wallpaperManager.getWallpaperFile(WallpaperManager.FLAG_SYSTEM)?.use { pfd ->
+                    FileInputStream(pfd.fileDescriptor).use { stream ->
+                        BitmapFactory.decodeStream(stream)
+                    }
+                }
+            } else {
+                null
+            }
+        } catch (e: Throwable) {
+            null
+        }
     }
 
-    private fun drawableToBitmap(drawable: Drawable): Bitmap? {
+    private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
+        if (drawable == null) return null
         if (drawable is BitmapDrawable) {
             val bitmap = drawable.bitmap
             if (bitmap != null) return bitmap.copy(Bitmap.Config.ARGB_8888, false)
@@ -67,7 +89,30 @@ class WallpaperProvider(private val context: Context) {
         if (width <= 0 || height <= 0) return null
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         drawable.setBounds(0, 0, width, height)
-        drawable.draw(android.graphics.Canvas(bitmap))
+        drawable.draw(Canvas(bitmap))
+        return bitmap
+    }
+
+    private fun gradientFallback(): Bitmap {
+        val metrics = context.resources.displayMetrics
+        val width = maxOf(720, metrics.widthPixels)
+        val height = maxOf(1280, metrics.heightPixels)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint().apply {
+            shader = LinearGradient(
+                0f, 0f,
+                width.toFloat(), height.toFloat(),
+                intArrayOf(
+                    0xFF243B55.toInt(),
+                    0xFF141E30.toInt(),
+                    0xFF0B0D12.toInt(),
+                ),
+                null,
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         return bitmap
     }
 
