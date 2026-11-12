@@ -47,6 +47,7 @@ fun Dock(
     ) {
         Box(Modifier.fillMaxSize().graphicsLayer { }) {
             Canvas(Modifier.fillMaxSize()) {
+                drawRect(color = androidx.compose.ui.graphics.Color(0xFF101216))
                 if (blurred != null) {
                     drawImage(
                         image = blurred,

@@ -102,8 +102,9 @@ fun HomeScreen(
     )
 
     LaunchedEffect(Unit) {
+        delay(300)
         if (pagerState.currentPage != 1) {
-            pagerState.scrollToPage(1)
+            runCatching { pagerState.scrollToPage(1) }
         }
     }
 
