@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
@@ -44,14 +45,16 @@ fun Dock(
             .height(84.dp)
             .clip(DockShape),
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            if (blurred != null) {
-                drawImage(
-                    image = blurred,
-                    dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                )
+        Box(Modifier.fillMaxSize().graphicsLayer { }) {
+            Canvas(Modifier.fillMaxSize()) {
+                if (blurred != null) {
+                    drawImage(
+                        image = blurred,
+                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                    )
+                }
+                drawRect(color = GlassWhite)
             }
-            drawRect(color = GlassWhite)
         }
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp, vertical = 6.dp),
