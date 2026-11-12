@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.data.HOME_CELLS_PER_PAGE
 import com.olivergreen.ioslauncher.data.HOME_COLUMNS
@@ -77,20 +78,6 @@ fun HomeScreen(
             ),
     ) {
         WallpaperBackdrop(full = wallpaper?.full)
-        IconButton(
-            onClick = onOpenSettings,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(top = 4.dp, end = 8.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Настройки",
-                tint = Color.White.copy(alpha = 0.55f),
-                modifier = Modifier.size(18.dp),
-            )
-        }
         Column(
             Modifier
                 .fillMaxSize()
@@ -127,6 +114,21 @@ fun HomeScreen(
                 blurred = wallpaper?.blurred,
                 onOpen = { entry -> context.startActivity(entry.launchIntent) },
                 onLongClick = onLongPress,
+            )
+        }
+        IconButton(
+            onClick = onOpenSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 4.dp, end = 8.dp)
+                .zIndex(1f),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Настройки",
+                tint = Color.White.copy(alpha = 0.55f),
+                modifier = Modifier.size(18.dp),
             )
         }
     }
