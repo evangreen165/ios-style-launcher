@@ -39,6 +39,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         settings.theme.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppTheme.AUTO)
     val firstRunDone: StateFlow<Boolean> =
         settings.firstRunDone.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val glassEffect: StateFlow<Boolean> =
+        settings.glassEffect.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     val combinedApps: StateFlow<List<AppEntry>> =
         combine(apps, homeOrder) { list, order ->
@@ -97,5 +99,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setFirstRunDone() {
         viewModelScope.launch { settings.setFirstRunDone() }
+    }
+
+    fun setGlassEffect(enabled: Boolean) {
+        viewModelScope.launch { settings.setGlassEffect(enabled) }
     }
 }

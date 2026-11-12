@@ -34,8 +34,10 @@ import com.olivergreen.ioslauncher.ui.theme.White
 fun SettingsSheet(
     showLabels: Boolean,
     theme: AppTheme,
+    glassEffect: Boolean,
     onShowLabelsChange: (Boolean) -> Unit,
     onThemeChange: (AppTheme) -> Unit,
+    onGlassEffectChange: (Boolean) -> Unit,
     onResetLayout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -66,6 +68,28 @@ fun SettingsSheet(
                 Switch(
                     checked = showLabels,
                     onCheckedChange = onShowLabelsChange,
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = Color(0xFF1D6FA5),
+                        checkedThumbColor = White,
+                    ),
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(text = "Эффект матового стекла", color = White, fontSize = 15.sp)
+                    Text(
+                        text = "Полупрозрачные панели (выкл. — сплошной цвет, экономия батареи)",
+                        color = White.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                    )
+                }
+                Switch(
+                    checked = glassEffect,
+                    onCheckedChange = onGlassEffectChange,
                     colors = SwitchDefaults.colors(
                         checkedTrackColor = Color(0xFF1D6FA5),
                         checkedThumbColor = White,

@@ -20,6 +20,7 @@ class SettingsStore(private val context: Context) {
         val HOME_ORDER = stringPreferencesKey("home_order")
         val SHOW_LABELS = booleanPreferencesKey("show_labels")
         val THEME = stringPreferencesKey("theme")
+        val GLASS_EFFECT = booleanPreferencesKey("glass_effect")
         val FIRST_RUN = booleanPreferencesKey("first_run_done")
     }
 
@@ -39,6 +40,10 @@ class SettingsStore(private val context: Context) {
         prefs[Keys.FIRST_RUN] ?: false
     }
 
+    val glassEffect: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.GLASS_EFFECT] ?: true
+    }
+
     suspend fun setHomeOrder(order: List<String>) {
         context.dataStore.edit { it[Keys.HOME_ORDER] = order.joinToString(",") }
     }
@@ -53,5 +58,9 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setFirstRunDone() {
         context.dataStore.edit { it[Keys.FIRST_RUN] = true }
+    }
+
+    suspend fun setGlassEffect(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.GLASS_EFFECT] = enabled }
     }
 }

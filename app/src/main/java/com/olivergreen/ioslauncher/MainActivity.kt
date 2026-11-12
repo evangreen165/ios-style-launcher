@@ -8,10 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,6 +62,7 @@ class MainActivity : ComponentActivity() {
             val icons by viewModel.icons.collectAsState()
             val showLabels by viewModel.showLabels.collectAsState()
             val theme by viewModel.theme.collectAsState()
+            val glassEffect by viewModel.glassEffect.collectAsState()
             val firstRunDone by viewModel.firstRunDone.collectAsState()
             val wallpaper by viewModel.wallpaperData.collectAsState()
             val context = LocalContext.current
@@ -98,6 +98,7 @@ class MainActivity : ComponentActivity() {
                     AppTheme.LIGHT -> false
                     AppTheme.DARK -> true
                 },
+                glassEnabled = glassEffect,
             ) {
                 Box(Modifier.fillMaxSize()) {
                     HomeScreen(
@@ -116,8 +117,8 @@ class MainActivity : ComponentActivity() {
                     }
                     AnimatedVisibility(
                         visible = drawerVisible,
-                        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                        enter = fadeIn(tween(180)),
+                        exit = fadeOut(tween(140)),
                     ) {
                         AppDrawer(
                             apps = apps,
@@ -156,8 +157,10 @@ class MainActivity : ComponentActivity() {
                         SettingsSheet(
                             showLabels = showLabels,
                             theme = theme,
+                            glassEffect = glassEffect,
                             onShowLabelsChange = { viewModel.setShowLabels(it) },
                             onThemeChange = { viewModel.setTheme(it) },
+                            onGlassEffectChange = { viewModel.setGlassEffect(it) },
                             onResetLayout = { viewModel.resetLayout() },
                             onDismiss = { settingsVisible = false },
                         )
