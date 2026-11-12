@@ -51,7 +51,7 @@ fun SearchField(
             modifier = Modifier
                 .weight(1f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0x4DFFFFFF)),
+                .background(Color(0xE6202024)),
         ) {
             TextField(
                 value = query,

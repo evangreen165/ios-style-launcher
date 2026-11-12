@@ -101,7 +101,7 @@ fun AppDrawer(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 4.dp,
+                        top = 10.dp,
                         bottom = 16.dp,
                     ),
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),

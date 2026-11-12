@@ -86,6 +86,12 @@ fun HomeScreen(
         },
     )
 
+    LaunchedEffect(Unit) {
+        if (pagerState.currentPage != 1) {
+            pagerState.scrollToPage(1)
+        }
+    }
+
     Box(
         Modifier
             .fillMaxSize()
