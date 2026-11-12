@@ -138,8 +138,8 @@ class MainActivity : ComponentActivity() {
                             menuEntry?.let { context.startActivity(LauncherIntents.appInfo(it.packageName)) }
                         },
                         onRemoveFromHome = menuEntry?.let { entry ->
-                            if (combinedApps.take(4).any { it.packageName == entry.packageName }) {
-                                { viewModel.removeFromPinned(entry.packageName) }
+                            if (combinedApps.any { it.packageName == entry.packageName }) {
+                                { viewModel.removeFromHome(entry.packageName) }
                             } else {
                                 null
                             }

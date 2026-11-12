@@ -17,14 +17,14 @@ enum class AppTheme {
 class SettingsStore(private val context: Context) {
 
     private object Keys {
-        val PINNED = stringPreferencesKey("pinned_order")
+        val HOME_ORDER = stringPreferencesKey("home_order")
         val SHOW_LABELS = booleanPreferencesKey("show_labels")
         val THEME = stringPreferencesKey("theme")
         val FIRST_RUN = booleanPreferencesKey("first_run_done")
     }
 
-    val pinnedOrder: Flow<List<String>> = context.dataStore.data.map { prefs ->
-        prefs[Keys.PINNED]?.takeIf { it.isNotBlank() }?.split(",") ?: emptyList()
+    val homeOrder: Flow<List<String>> = context.dataStore.data.map { prefs ->
+        prefs[Keys.HOME_ORDER]?.takeIf { it.isNotBlank() }?.split(",") ?: emptyList()
     }
 
     val showLabels: Flow<Boolean> = context.dataStore.data.map { prefs ->
@@ -39,8 +39,8 @@ class SettingsStore(private val context: Context) {
         prefs[Keys.FIRST_RUN] ?: false
     }
 
-    suspend fun setPinnedOrder(order: List<String>) {
-        context.dataStore.edit { it[Keys.PINNED] = order.joinToString(",") }
+    suspend fun setHomeOrder(order: List<String>) {
+        context.dataStore.edit { it[Keys.HOME_ORDER] = order.joinToString(",") }
     }
 
     suspend fun setShowLabels(show: Boolean) {

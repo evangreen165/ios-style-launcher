@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,13 +41,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.olivergreen.ioslauncher.data.AppEntry
 import com.olivergreen.ioslauncher.data.HOME_CELLS_PER_PAGE
 import com.olivergreen.ioslauncher.data.HOME_COLUMNS
@@ -60,6 +70,7 @@ import com.olivergreen.ioslauncher.viewmodel.HomeViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 private const val COLUMNS = HOME_COLUMNS
@@ -81,6 +92,7 @@ fun HomeScreen(
     val wallpaper by viewModel.wallpaperData.collectAsState()
     val showLabels by viewModel.showLabels.collectAsState()
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     val pagerState = rememberPagerState(
         initialPage = 1,
@@ -93,6 +105,36 @@ fun HomeScreen(
         if (pagerState.currentPage != 1) {
             pagerState.scrollToPage(1)
         }
+    }
+
+    val gridRects = remember { mutableStateMapOf<Int, Rect>() }
+    val dockRects = remember { mutableStateMapOf<Int, Rect>() }
+    var dragging by remember { mutableStateOf<AppEntry?>(null) }
+    var dragCenter by remember { mutableStateOf(Offset.Zero) }
+    var dropTarget by remember { mutableStateOf<DropTarget?>(null) }
+
+    val onDragMove: (Offset) -> Unit = { root ->
+        dragCenter = root
+        dropTarget = dockRects.entries.firstOrNull { it.value.contains(root) }
+            ?.let { DropTarget(index = it.key, inDock = true) }
+            ?: gridRects.entries.firstOrNull { it.value.contains(root) }
+                ?.let { DropTarget(index = it.key, inDock = false) }
+    }
+
+    val onDragDrop: (Offset) -> Unit = {
+        val entry = dragging
+        val target = dropTarget
+        if (entry != null && target != null) {
+            viewModel.moveToIndex(entry.packageName, target.index)
+        }
+        dragging = null
+        dropTarget = null
+        dragCenter = Offset.Zero
+    }
+
+    val startDrag: (AppEntry) -> Unit = { entry ->
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        dragging = entry
     }
 
     Box(
@@ -124,6 +166,11 @@ fun HomeScreen(
                         showLabels = showLabels,
                         onOpen = { entry -> context.startActivity(entry.launchIntent) },
                         onLongPress = onLongPress,
+                        onDragStart = { entry -> startDrag(entry) },
+                        onDrag = onDragMove,
+                        onDragEnd = onDragDrop,
+                        highlightedIndex = dropTarget?.takeIf { !it.inDock }?.index,
+                        registerCell = { index, rect -> gridRects[index] = rect },
                     )
                 }
             }
@@ -144,10 +191,63 @@ fun HomeScreen(
                 blurred = wallpaper?.blurred,
                 onOpen = { entry -> context.startActivity(entry.launchIntent) },
                 onLongClick = onLongPress,
+                onDragStart = { entry -> startDrag(entry) },
+                onDrag = onDragMove,
+                onDragEnd = onDragDrop,
+                dropSlot = dropTarget?.takeIf { it.inDock }?.index,
+                registerSlot = { index, rect -> dockRects[index] = rect },
             )
+        }
+        dragging?.let { entry ->
+            val icon = icons[entry.iconKey]
+            val overlaySizePx = with(androidx.compose.ui.platform.LocalDensity.current) { OVERLAY_ICON_SIZE.toPx() }
+            Box(
+                modifier = Modifier
+                    .zIndex(10f)
+                    .offset {
+                        IntOffset(
+                            (dragCenter.x - overlaySizePx / 2f).roundToInt(),
+                            (dragCenter.y - overlaySizePx / 2f).roundToInt(),
+                        )
+                    }
+                    .size(OVERLAY_ICON_SIZE)
+                    .graphicsLayer {
+                        scaleX = 1.15f
+                        scaleY = 1.15f
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (icon != null) {
+                    androidx.compose.foundation.Image(
+                        bitmap = icon,
+                        contentDescription = entry.label,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Box(
+                        Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp)).background(Color(0xFF1D6FA5)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = entry.label.firstOrNull()?.uppercase() ?: "?",
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
+private class DropTarget(
+    val index: Int,
+    val inDock: Boolean,
+)
+
+private val OVERLAY_ICON_SIZE = 64.dp
 
 @Composable
 private fun TodayPage() {
@@ -272,6 +372,11 @@ private fun AppPage(
     showLabels: Boolean,
     onOpen: (AppEntry) -> Unit,
     onLongPress: ((AppEntry) -> Unit)?,
+    onDragStart: ((AppEntry) -> Unit)?,
+    onDrag: ((Offset) -> Unit)?,
+    onDragEnd: ((Offset) -> Unit)?,
+    highlightedIndex: Int?,
+    registerCell: ((Int, Rect) -> Unit)?,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(start = 20.dp, end = 20.dp, top = 18.dp),
@@ -289,7 +394,16 @@ private fun AppPage(
                             showLabel = showLabels,
                             onClick = { onOpen(entry) },
                             onLongClick = onLongPress?.let { { it(entry) } },
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            onDragStart = onDragStart?.let { { it(entry) } },
+                            onDrag = onDrag,
+                            onDragEnd = onDragEnd,
+                            highlighted = highlightedIndex == index,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .onGloballyPositioned { coords ->
+                                    registerCell?.invoke(index, coords.boundsInRoot())
+                                },
                         )
                     } else {
                         Spacer(Modifier.weight(1f).fillMaxHeight())

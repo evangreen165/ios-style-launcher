@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.olivergreen.ioslauncher.data.AppEntry
@@ -27,6 +30,11 @@ fun Dock(
     blurred: ImageBitmap?,
     onOpen: (AppEntry) -> Unit,
     onLongClick: ((AppEntry) -> Unit)? = null,
+    onDragStart: ((AppEntry) -> Unit)? = null,
+    onDrag: ((Offset) -> Unit)? = null,
+    onDragEnd: ((Offset) -> Unit)? = null,
+    dropSlot: Int? = null,
+    registerSlot: ((Int, Rect) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -58,8 +66,17 @@ fun Dock(
                         showLabel = false,
                         onClick = { onOpen(entry) },
                         onLongClick = onLongClick?.let { { it(entry) } },
+                        onDragStart = onDragStart?.let { { it(entry) } },
+                        onDrag = onDrag,
+                        onDragEnd = onDragEnd,
+                        highlighted = dropSlot == index,
                         iconSize = 56.dp,
-                        modifier = Modifier.weight(1f).fillMaxSize(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .onGloballyPositioned { coords ->
+                                registerSlot?.invoke(index, coords.boundsInRoot())
+                            },
                     )
                 } else {
                     Spacer(Modifier.weight(1f).fillMaxSize())

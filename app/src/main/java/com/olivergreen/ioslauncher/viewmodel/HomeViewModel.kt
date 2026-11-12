@@ -31,8 +31,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     val icons = iconLoader.icons
     val wallpaperData = wallpaper.wallpaper
-    val pinnedOrder: StateFlow<List<String>> =
-        settings.pinnedOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val homeOrder: StateFlow<List<String>> =
+        settings.homeOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val showLabels: StateFlow<Boolean> =
         settings.showLabels.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     val theme: StateFlow<AppTheme> =
@@ -41,8 +41,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         settings.firstRunDone.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val combinedApps: StateFlow<List<AppEntry>> =
-        combine(apps, pinnedOrder) { list, pinned ->
-            mergePinnedFirst(list, pinned)
+        combine(apps, homeOrder) { list, order ->
+            mergePinnedFirst(list, order)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
@@ -61,15 +61,30 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { wallpaper.refresh() }
     }
 
-    fun removeFromPinned(packageName: String) {
+    fun removeFromHome(packageName: String) {
         viewModelScope.launch {
-            val current = settings.pinnedOrder.first()
-            settings.setPinnedOrder(current.filterNot { it == packageName })
+            val current = settings.homeOrder.first()
+            settings.setHomeOrder(current.filterNot { it == packageName })
+        }
+    }
+
+    fun moveToIndex(packageName: String, targetIndex: Int) {
+        viewModelScope.launch {
+            val current = combinedApps.value
+            if (current.isEmpty()) return@launch
+            val from = current.indexOfFirst { it.packageName == packageName }
+            if (from < 0) return@launch
+            val target = targetIndex.coerceIn(0, current.size - 1)
+            if (from == target) return@launch
+            val list = current.toMutableList()
+            val entry = list.removeAt(from)
+            list.add(target, entry)
+            settings.setHomeOrder(list.map { it.packageName })
         }
     }
 
     fun resetLayout() {
-        viewModelScope.launch { settings.setPinnedOrder(emptyList()) }
+        viewModelScope.launch { settings.setHomeOrder(emptyList()) }
     }
 
     fun setShowLabels(show: Boolean) {
